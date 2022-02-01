@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<style type="text/css">
+	ul {
+		padding: 1px;
+		margin: 0 auto;
+		width: 810px;
+		height: 50px;
+		background-color: black;				
+	}
+	ul > li {
+		list-style: none;
+		/* list-style-position: inside; */
+		background-color: #787878;
+		float: left;
+		width: 270px;
+		height: 50px;
+		line-height: 50px;
+		text-align: center;
+		font-weight: bold;
+		/* border: 1px solid blue; */
+	}
+	.bg {
+		background-color: #EAEAEA;
+	}
+	a:link { text-decoration: none; color: white; }
+	a:visited { text-decoration: none; color: white; }
+	a:hover { color: red; }
+	#result {
+		width: 810px;
+		margin: 0 auto;
+		min-height: 100px;
+		border: 1px solid red;				
+	}	
+</style>
+
+</head>
+<body>
+	<nav>
+		<ul>
+			<li data-param="board"><a href="#">게시 글 리스트</a></li>
+			<li data-param="book"><a href="#">도서 리스트</a></li>
+			<li data-param="lotto"><a href="#">로또 당첨 번호</a></li>			
+		</ul>
+	</nav>
+	<div id="result"></div>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<style type="text/css">
+	ul {
+		padding: 1px;
+		margin: 0 auto;
+		width: 810px;
+		height: 50px;
+		background-color: black;				
+	}
+	ul > li {
+		list-style: none;
+		/* list-style-position: inside; */
+		background-color: #787878;
+		float: left;
+		width: 270px;
+		height: 50px;
+		line-height: 50px;
+		text-align: center;
+		font-weight: bold;
+		/* border: 1px solid blue; */
+	}
+	.bg {
+		background-color: #EAEAEA;
+	}
+	a:link { text-decoration: none; color: white; }
+	a:visited { text-decoration: none; color: white; }
+	a:hover { color: red; }
+	#result {
+		width: 810px;
+		margin: 0 auto;
+		min-height: 100px;
+		border: 1px solid red;		
+	}
+	table {
+		border: 1px solid blue;
+		border-collapse: collapse;
+		font-size: 12px;
+	}
+	table, h2 {
+		width: 800px;
+		margin: 30px auto;
+	}
+	h2 {
+		text-align: center;
+		margin: 30px;
+	}
+	th {
+		border: 1px solid blue;
+		background: #EAEAFF;
+		height: 24px;
+		line-height: 24px;	
+	}	
+	td {
+		border: 1px solid lightgray;		
+		line-height: 30px;
+		height: 30px;
+	}
+	tr:hover {
+		background: #EAEAEA;
+	}
+	.center { text-align: center; }
+	.left10 { text-indent: 10px; }	
+	div#lottoWrap {
+		width: 700px;
+		margin: 30px auto;
+		padding: 3px;
+		background-color: #EAEAEA;
+		border-radius: 10px;
+	}		
+	div.num_box {
+		padding: 7px;
+		margin: 7px;
+		text-align: center;	
+		background-color: #FFFFFF;
+		border-radius: 5px;	
+		border: 1px solid #AAAAFF;
+	}
+	span.lotto_num {
+		display: inline-block;
+		width: 45px;
+		height: 45px;
+		line-height: 45px;
+		margin: 0px 7px;		
+		vertical-align: middle;
+	}
+	span.bonus_txt {
+		color: gray;
+		font-size: 14px;
+		font-weight: bold;
+		width: 120px;
+	}
+	span.lotto_num:first-child {
+		font-size: 20px;
+		font-weight: bold;
+		color: #3333FF;		
+		width: 80px;	
+	}	
+</style>
+<script src="js/jquery-3.3.1.min.js"></script>
+<script>
+	$(document).ready(function() {
+		
+		// 메뉴인 il 요소에 마우스 커서가 올라오거나 나갈 때 처리 
+		$("nav > ul > li").on({
+			mouseenter: function(e) {				
+				$(this).addClass("bg").find("a").css("color", "red");				
+			},
+			mouseleave: function(e) {
+				$(this).removeClass("bg").find("a").css("color", "white");
+			}
+		});
+		
+		// 게시 글 리스트 버튼이 클릭되면
+		$("nav li[data-param='board']").on("click", function() {
+			
+			$("#result").empty();			
+			
+			$.ajax({
+				url: "ajax/ajaxProcess.jsp",
+				type: "post",
+				dataType: "json",
+				data: "reqParam=" + $(this).attr("data-param"), 
+				success: function(resData) {
+					/* 문서 제목과 게시 글 리스트를 출력할 테이블을 문서에 추가하고
+					 * 테이블의 제목 행을 문서에 추가한 테이블에 추가하고 있다.
+					 **/
+					$("<h2>게시 글 리스트</h2>").appendTo("#result");
+					$("<table id='boardTable'></table>").appendTo("#result");
+					$("<tr>"
+						+ "<th>No</th>"
+						+ "<th>제 목</th>"
+						+ "<th>작성자</th>"
+						+ "<th>작성일</th>"
+						+ "<th>조회수</th>"
+					+ "</tr>").appendTo("#boardTable");
+					
+					/* 콜백 함수의 파라미터로 넘어 오는 응답 데이터 resData는 
+					 * 여러 개의 게시 글 정보가 저장된 객체 배열로 넘어 온다. 
+					 * 요청을 처리하는 서버에서 10개의 게시 글을 ArrayList에
+					 * 담아 Gson 라이브러리를 사용해 JSON 데이터로 변환하였으므로
+					 * 이 데이터를 응답 데이터로 받으면 객체 배열 형태가 된다.
+					 * 배열은 아래와 같이 $.each() 메서드를 사용해 접근 할 수 있다.
+					 **/
+					$.each(resData, function(i, v) {
+						
+						// 날짜 데이터를 YYYY년 MM월 DD일 형식으로 편집
+						var regDate = new Date(this.regDate);
+						var strDate = regDate.getFullYear() + "년 "
+								+ (regDate.getMonth() + 1) + "월 "
+								+ regDate.getDate() + "일";
+						
+						/* $.each() 메서드는 첫 번째 인수로 지정한 배열의 개수만큼 두 번째 
+						 * 지정한 함수를 호출하기 때문에 이 함수 안에서 한 번의 작업은
+						 * 반복문이 한 번 실행되는 것과 마찬가지가 된다. 그러므로 아래는
+						 * 반복문 안에서 현재 행에 해당하는 게시 글 하나를 읽어와 한 행을
+						 * 구성하여 테이블에 새로운 행으로 계속 추가하는 코드가 된다.
+						 * 
+						 * each() 함수에 지정하는 콜백 함수 안에서 현재 index에 해당하는
+						 * 배열의 요소에 접근하려면 this 또는 콜백 함수의 두 번째 매개변수로
+						 * 접근할 수 있으며 아래는 두 번째 매개변수인 v로 접근하는 예제이다.
+						 *
+						 * 배열 resData는 객체로 이루어진 배열이므로 현재 index에 해당하는
+						 * 배열 요소를 읽어오면 자바스크립트 객체이며 데이터를 읽어오려면
+						 * 아래와 같이 변수에 점(.) 연산자를 사용해 데이터를 읽어 올 수 있다.
+						 **/ 
+						$("<tr>"
+							+ "<td class='center'>" + v.no + "</td>"
+							+ "<td class='left10'>" + v.title + "</td>"
+							+ "<td class='center'>" + v.writer + "</td>"
+							+ "<td class='center'>" + strDate + "</td>"
+							+ "<td class='center'>" + v.readCount + "</td>"										
+						+ "</tr>").appendTo("#boardTable");		
+					});					
+				},
+				error: function(xhr, statusText) {
+					alert("error : " + statusText + ", " + xhr.status);
+				}					
+			});			
+			return false;
+		});
+		
+		// 도서 리스트 버튼이 클릭되면
+		$("nav li[data-param='book']").on("click", function() {
+			
+			$("#result").empty();			
+			
+			$.ajax({
+				url: "ajax/ajaxProcess.jsp",
+				type: "post",
+				dataType: "json",
+				data: "reqParam=" + $(this).attr("data-param"), 
+				success: function(resData) {
+													
+					$("<h2>도서 리스트</h2>").appendTo("#result");
+					$("<table id='bookTable'></table>").appendTo("#result");
+					
+					var thTr = "<tr>"
+									+ "<th>isbn</th>"
+									+ "<th>도서명</th>"
+									+ "<th>저자</th>"
+									+ "<th>출판일</th>"
+									+ "<th>가격</th>"
+									+ "<th>출판사</th>"
+								+"</tr>";								
+					$("#bookTable").append(thTr);
+					
+					/* 콜백 함수의 파라미터로 넘어 오는 응답 데이터 resData는 
+					 * 여러 개의 도서 정보가 저장된 객체 배열로 넘어 온다. 
+					 * 요청을 처리하는 서버에서 10개의 도서 정보를 ArrayList에
+					 * 담아 Gson 라이브러리를 사용해 JSON 데이터로 변환하였으므로
+					 * 이 데이터를 응답 데이터로 받으면 객체 배열 형태가 된다.
+					 * 배열은 아래와 같이 $.each() 메서드를 사용해 접근 할 수 있다.
+					 **/					
+					$.each(resData, function(i, v) {
+						
+						// 날짜 데이터를 YYYY년 MM월 DD일 형식으로 편집
+						var pubDate = new Date(this.pubDate);
+						var strDate = pubDate.getFullYear() + "년 "
+								+ (pubDate.getMonth() + 1) + "월 "
+								+ pubDate.getDate() + "일";						
+						
+						/* $.each() 메서드는 첫 번째 인수로 지정한 배열의 개수만큼 두 번째 
+						 * 지정한 함수를 호출하기 때문에 이 함수 안에서 한 번의 작업은
+						 * 반복문이 한 번 실행되는 것과 마찬가지가 된다. 그러므로 아래는
+						 * 반복문 안에서 현재 행에 해당하는 게시 글 하나를 읽어와 한 행을
+						 * 구성하여 테이블에 새로운 행으로 계속 추가하는 코드가 된다.
+						 * 
+						 * each() 함수에 지정하는 콜백 함수 안에서 현재 index에 해당하는
+						 * 배열의 요소에 접근하려면 this 또는 콜백 함수의 두 번째 매개변수로
+						 * 접근할 수 있으며 아래는 this로 접근하는 예제이다.
+						 *
+						 * 배열 resData는 객체로 이루어진 배열이므로 현재 index에 해당하는
+						 * 배열 요소를 읽어오면 자바스크립트 객체이며 데이터를 읽어오려면
+						 * 아래와 같이 변수에 점(.) 연산자를 사용해 데이터를 읽어 올 수 있다.
+						 **/
+						var tdTr = "<tr>"
+										+ "<td class='center'>" + this.isbnCode + "</td>"
+										+ "<td class='left10'>" + this.bookName + "</td>"
+										+ "<td class='center'>" + this.writer + "</td>"
+										+ "<td class='center'>" + strDate + "</td>"
+										+ "<td class='center'>" + this.price + "</td>"
+										+ "<td class='center'>" + this.publisher + "</td>"	
+									+ "</tr>";						
+						$(tdTr).appendTo("#bookTable");						
+					});					
+				},
+				error: function(xhr, statusText) {
+					alert("error : " + statusText + ", " + xhr.status);
+				}					
+			});			
+			return false;
+		});
+		
+		// 로또 당첨 번호 버튼이 클릭되면
+		$("nav li[data-param='lotto']").on("click", function() {
+			
+			$("#result").empty();			
+			//$("#result").css("height", "780");
+			$.ajax({
+				url: "ajax/ajaxProcess.jsp",
+				type: "post",
+				dataType: "json",
+				data: "reqParam=" + $(this).attr("data-param"), 
+				success: function(resData) {
+					
+					$("#result").append(
+							"<h2 class='top-margin'>로또 당첨 번호 리스트</h2>")
+					$("#result").append("<div id='lottoWrap' class='top-margin'></div>");
+					
+					/* 콜백 함수의 파라미터로 넘어 오는 응답 데이터 resData는 
+					 * 여러 개의 로또 당첨번호가 저장된 객체 배열로 넘어 온다. 
+					 * 요청을 처리하는 서버에서 10개의 로또 당첨번호를 ArrayList에
+					 * 담아 Gson 라이브러리를 사용해 JSON 데이터로 변환하였으므로
+					 * 이 데이터를 응답 데이터로 받으면 객체 배열 형태가 된다.
+					 * 배열은 아래와 같이 $.each() 메서드를 사용해 접근 할 수 있다.
+					 **/					
+					$.each(resData, function(i, v) {
+						
+						/* 숫자가 10보다 작은 이미지 이름은 "ball_01.png"와 같이 
+						 * 숫자 앞에 0이 붙어 있는 형태로 되어 있기 때문에 삼 항
+						 * 연산자를 이용해 10보다 작은 수에 대한 처리를 하고 있다. 
+						 **/ 
+						var num1Img = "<img src='images/ball_" + (this.num1 < 10 ? "0" + this.num1 : this.num1) + ".png' />";
+						var num2Img = "<img src='images/ball_" + (this.num2 < 10 ? "0" + this.num2 : this.num2) + ".png' />";
+						var num3Img = "<img src='images/ball_" + (this.num3 < 10 ? "0" + this.num3 : this.num3) + ".png' />";
+						var num4Img = "<img src='images/ball_" + (this.num4 < 10 ? "0" + this.num4 : this.num4) + ".png' />";
+						var num5Img = "<img src='images/ball_" + (this.num5 < 10 ? "0" + this.num5 : this.num5) + ".png' />";
+						var num6Img = "<img src='images/ball_" + (this.num6 < 10 ? "0" + this.num6 : this.num6) + ".png' />";
+						var bonusImg = "<img src='images/ball_" + (this.bonusNum < 10 ? "0" + this.bonusNum : this.bonusNum) + ".png' />";
+						
+						$("<div class=num_box>"
+							+ "<span class='center lotto_num'>" + this.times + "</span>"
+							+ "<span class='center lotto_num num_img'>" + num1Img + "</span>"
+							+ "<span class='center lotto_num num_img'>" + num2Img + "</span>"
+							+ "<span class='center lotto_num num_img'>" + num3Img + "</span>"
+							+ "<span class='center lotto_num num_img'>" + num4Img + "</span>"
+							+ "<span class='center lotto_num num_img'>" + num5Img + "</span>"
+							+ "<span class='center lotto_num num_img'>" + num6Img + "</span>"
+							+ "<span class='center  lotto_num bonus_txt'> + 보너스 번호 </span>"
+							+ "<span class='center lotto_num num_img'>" + bonusImg + "</span>"	
+						+ "</div>").appendTo("#lottoWrap");
+					});					
+				},
+				error: function(xhr, statusText) {
+					alert("error : " + statusText + ", " + xhr.status);
+				}					
+			});			
+			return false;
+		});
+	});
+</script>
+</head>
+<body>
+	<nav>
+		<ul>
+			<li data-param="board"><a href="#">게시 글 리스트</a></li>
+			<li data-param="book"><a href="#">도서 리스트</a></li>
+			<li data-param="lotto"><a href="#">로또 당첨 번호</a></li>			
+		</ul>
+	</nav>
+	<div id="result"></div>
+</body>
+</html>
